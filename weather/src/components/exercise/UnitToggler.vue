@@ -1,28 +1,33 @@
 <script setup>
 import { useConfigStore } from '../../stores/configStore'
-
 const configStore = useConfigStore()
 </script>
 
 <template>
-  <div class="unit-toggler">
-    <span>날씨단위: {{ configStore.unit === 'celsius' ? '섭씨(℃)' : '화씨(℉)' }}</span>
-    <button @click="configStore.toggleUnit">단위변경</button>
-  </div>
+  <button class="unit-toggle" @click="configStore.toggleUnit">
+    <span class="unit-toggle__label">{{ configStore.unit === 'celsius' ? '섭씨 ℃' : '화씨 ℉' }}</span>
+    <span class="unit-toggle__icon">🔄</span>
+  </button>
 </template>
 
 <style scoped>
-.unit-toggler {
+.unit-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-.unit-toggler button {
-  background-color: #2ecc71;
-  color: white;
+  gap: 6px;
+  padding: 8px 14px;
   border: none;
-  padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.15s ease;
+}
+
+.unit-toggle:hover {
+  transform: translateY(-1px);
 }
 </style>
