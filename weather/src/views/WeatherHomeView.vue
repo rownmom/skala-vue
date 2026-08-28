@@ -8,32 +8,21 @@ import WeatherCard from '../components/exercise/WeatherCard.vue'
 import { CITY_LIST } from '../config/weatherCities'
 
 const router = useRouter()
-
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
-
 const weatherList = ref([])
 const isLoading = ref(false)
 const searchQuery = ref('')
 const selectedCityInfo = ref('')
 
-// 컴포넌트 마운트 시, 등록된 도시들의 실제 날씨를 OpenWeatherMap에서 가져온다.
 const fetchAllWeather = async () => {
   isLoading.value = true
   try {
     const requests = CITY_LIST.map((city) =>
       axios.get('https://api.openweathermap.org/data/2.5/weather', {
-        params: {
-          lat: city.lat,
-          lon: city.lon,
-          appid: API_KEY,
-          units: 'metric',
-          lang: 'kr',
-        },
+        params: { lat: city.lat, lon: city.lon, appid: API_KEY, units: 'metric', lang: 'kr' },
       }),
     )
-    // 여러 개의 axios 요청을 한 번에 병렬 처리
     const responses = await axios.all(requests)
-
     weatherList.value = responses.map((response, index) => ({
       id: CITY_LIST[index].id,
       name: CITY_LIST[index].name,
@@ -46,52 +35,60 @@ const fetchAllWeather = async () => {
     isLoading.value = false
   }
 }
-
-onMounted(() => {
-  fetchAllWeather()
-})
+onMounted(() => { fetchAllWeather() })
 
 const filteredList = computed(() => {
   if (!searchQuery.value) return weatherList.value
   return weatherList.value.filter((city) => city.name.includes(searchQuery.value))
 })
-
-const handleUpdateQuery = (newQuery) => {
-  searchQuery.value = newQuery
-}
-
-const handleSelectCity = (cityName) => {
-  selectedCityInfo.value = `${cityName}이(가) 선택되었습니다.`
-}
-
-const handleClickDetail = (cityId) => {
-  router.push('/weather/' + cityId)
-}
+const handleUpdateQuery = (newQuery) => { searchQuery.value = newQuery }
+const handleSelectCity = (cityName) => { selectedCityInfo.value = `${cityName}이(가) 선택되었습니다.` }
+const handleClickDetail = (cityId) => { router.push('/weather/' + cityId) }
 </script>
 
 <template>
-  <div class="practice-section">
-    <h2>과제 4,5,6: 라우터 + 스토어 + API 적용</h2>
+  <BaseDashboardCard title="🌤 날씨 대시보드">
+    <SearchBar :model-value="searchQuery" @update-query="handleUpdateQuery" />
 
-    <p v-if="isLoading">실시간 날씨 데이터를 불러오는 중입니다...</p>
+    <p v-if="isLoading" class="state-msg">날씨 정보를 불러오는 중...</p>
 
-    <BaseDashboardCard title="도시 검색">
-      <SearchBar :query="searchQuery" @update-query="handleUpdateQuery" />
-    </BaseDashboardCard>
+    <div v-else class="weather-grid">
+      <WeatherCard
+        v-for="city in filteredList"
+        :key="city.id"
+        :city="city"
+        @select-city="handleSelectCity"
+        @click-detail="handleClickDetail"
+      />
+    </div>
 
-    <BaseDashboardCard title="지역별 날씨 현황">
-      <WeatherCard v-for="city in filteredList" :key="city.id" :city="city" @select-city="handleSelectCity" @click-detail="handleClickDetail" />
-    </BaseDashboardCard>
-
+    <p v-if="!isLoading && filteredList.length === 0" class="state-msg">검색 결과가 없습니다.</p>
     <p v-if="selectedCityInfo" class="footer-msg">{{ selectedCityInfo }}</p>
-  </div>
+  </BaseDashboardCard>
 </template>
 
 <style scoped>
-.footer-msg {
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 240px));
+  justify-content: center;
+  gap: 20px;
+}
+
+.state-msg {
+  color: var(--color-text-light);
+  padding: 40px 0;
   text-align: center;
-  background: #eafaf1;
-  padding: 10px;
-  border-radius: 6px;
+}
+
+.footer-msg {
+  margin-top: 24px;
+  padding: 14px 18px;
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  text-align: center;
 }
 </style>
