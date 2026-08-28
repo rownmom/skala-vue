@@ -8,9 +8,7 @@ import { CITY_LIST } from '../config/weatherCities'
 const route = useRoute()
 const router = useRouter()
 const configStore = useConfigStore()
-
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
-
 const cityDetail = ref(null)
 const isLoading = ref(false)
 
@@ -18,17 +16,10 @@ const fetchDetail = async () => {
   const cityId = route.params.cityId
   const cityInfo = CITY_LIST.find((c) => c.id === cityId)
   if (!cityInfo) return
-
   isLoading.value = true
   try {
     const response = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
-      params: {
-        lat: cityInfo.lat,
-        lon: cityInfo.lon,
-        appid: API_KEY,
-        units: 'metric',
-        lang: 'kr',
-      },
+      params: { lat: cityInfo.lat, lon: cityInfo.lon, appid: API_KEY, units: 'metric', lang: 'kr' },
     })
     cityDetail.value = {
       region: `대한민국 ${cityInfo.name}`,
@@ -43,49 +34,115 @@ const fetchDetail = async () => {
     isLoading.value = false
   }
 }
-
-onMounted(() => {
-  fetchDetail()
-})
+onMounted(() => { fetchDetail() })
 
 const displayTemp = computed(() => {
   if (!cityDetail.value) return null
   const rawTemp = cityDetail.value.temp
-  if (configStore.unit === 'fahrenheit') {
-    return Math.round((rawTemp * 9) / 5 + 32)
-  }
+  if (configStore.unit === 'fahrenheit') return Math.round((rawTemp * 9) / 5 + 32)
   return rawTemp
 })
-
-const goBack = () => {
-  router.push('/')
-}
+const goBack = () => { router.push('/') }
 </script>
 
 <template>
-  <div class="practice-section">
-    <h2>지역별 상세 기상 관측 정보</h2>
+  <div class="detail-page">
+    <button class="back-btn" @click="goBack">← 대시보드로</button>
 
-    <p v-if="isLoading">데이터를 불러오는 중입니다...</p>
+    <p v-if="isLoading" class="state-msg">불러오는 중...</p>
 
     <div v-else-if="cityDetail" class="detail-card">
-      <p>📍 지정 지역: {{ cityDetail.region }}</p>
-      <p>실시간 기온: {{ displayTemp }}{{ configStore.unitSymbol }}</p>
-      <p>기상 현황: {{ cityDetail.status }}</p>
-      <p>대기 습도: {{ cityDetail.humidity }}%</p>
-      <p>현재 풍속: {{ cityDetail.windSpeed }}m/s</p>
-    </div>
-    <div v-else class="detail-card">해당 도시의 데이터를 찾을 수 없습니다.</div>
+      <p class="detail-region">{{ cityDetail.region }}</p>
+      <p class="detail-temp">{{ displayTemp }}<span class="detail-unit">{{ configStore.unitSymbol }}</span></p>
+      <p class="detail-status">{{ cityDetail.status }}</p>
 
-    <button @click="goBack">← 메인 대시보드로 돌아가기</button>
+      <div class="detail-stats">
+        <div class="stat">
+          <p class="stat-label">습도</p>
+          <p class="stat-value">{{ cityDetail.humidity }}%</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">풍속</p>
+          <p class="stat-value">{{ cityDetail.windSpeed }} m/s</p>
+        </div>
+      </div>
+    </div>
+
+    <p v-else class="state-msg">해당 도시 정보를 찾을 수 없습니다.</p>
   </div>
 </template>
 
 <style scoped>
+.detail-page {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.back-btn {
+  border: none;
+  background: none;
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
 .detail-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.detail-region {
+  color: var(--color-text-light);
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.detail-temp {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  margin: 0;
+}
+
+.detail-unit {
+  font-size: 1.6rem;
+  color: var(--color-text-light);
+  margin-left: 6px;
+}
+
+.detail-status {
+  color: var(--color-text-light);
+  margin: 8px 0 32px;
+}
+
+.detail-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  border-top: 1px solid #eee;
+  padding-top: 24px;
+}
+
+.stat-label {
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  margin: 0 0 4px;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.state-msg {
+  text-align: center;
+  color: var(--color-text-light);
+  padding: 60px 0;
 }
 </style>
